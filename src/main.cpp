@@ -24,15 +24,16 @@
 #include <QCommandLineOption>
 #include <QCommandLineParser>
 
+#include <QDebug>
+#include <QTranslator>
+#include <QLocale>
+#include <QFile>            // ★ Qt6必须显式包含 ★
+
 #include "launcher.h"
 #include "launchermodel.h"
 #include "pagemodel.h"
 #include "iconitem.h"
 #include "appmanager.h"
-
-#include <QDebug>
-#include <QTranslator>
-#include <QLocale>
 
 #define DBUS_NAME "com.cutefish.Launcher"
 #define DBUS_PATH "/Launcher"
@@ -40,8 +41,9 @@
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    // Qt6 默认开启 High DPI，不需要 AA_EnableHighDpiScaling
 
+    // QML 注册
     QByteArray uri = "Cutefish.Launcher";
     qmlRegisterType<LauncherModel>(uri, 1, 0, "LauncherModel");
     qmlRegisterType<PageModel>(uri, 1, 0, "PageModel");
@@ -59,15 +61,13 @@ int main(int argc, char *argv[])
 
     QPixmapCache::setCacheLimit(2048);
 
+    // 命令行参数
     QCommandLineParser parser;
     QCommandLineOption showOption(QStringLiteral("show"), "Show Launcher");
     parser.addOption(showOption);
-    // QCommandLineOption hideOption(QStringLiteral("hide"), "Hide Launcher");
-    // parser.addOption(hideOption);
-    // QCommandLineOption toggleOption(QStringLiteral("toggle"), "Toggle Launcher");
-    // parser.addOption(toggleOption);
     parser.process(app.arguments());
 
+    // DBus 单实例
     QDBusConnection dbus = QDBusConnection::sessionBus();
     if (!dbus.registerService(DBUS_NAME)) {
         QDBusInterface iface(DBUS_NAME, DBUS_PATH, DBUS_INTERFACE, dbus);
@@ -75,8 +75,10 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    // 翻译文件加载
     QLocale locale;
-    QString qmFilePath = QString("%1/%2.qm").arg("/usr/share/cutefish-launcher/translations/").arg(locale.name());
+    QString qmFilePath = QString("/usr/share/cutefish-launcher/translations/%1.qm").arg(locale.name());
+
     if (QFile::exists(qmFilePath)) {
         QTranslator *translator = new QTranslator(app.instance());
         if (translator->load(qmFilePath)) {
@@ -86,6 +88,7 @@ int main(int argc, char *argv[])
         }
     }
 
+    // 启动 Launcher
     bool firstShow = parser.isSet(showOption);
     Launcher launcher(firstShow);
 

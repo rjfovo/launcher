@@ -28,40 +28,54 @@
 #include <QQmlContext>
 #include <QScreen>
 #include <QTimer>
+#include <QUrl>
+#include <QShowEvent>
+#include <QResizeEvent>
 
-#include <KWindowSystem>
+#include <QQuickView>
 
 Launcher::Launcher(bool firstShow, QQuickView *w)
     : QQuickView(w)
     , m_dockInterface("com.cutefish.Dock",
-                    "/Dock",
-                    "com.cutefish.Dock", QDBusConnection::sessionBus())
-    , m_hideTimer(new QTimer)
+                      "/Dock",
+                      "com.cutefish.Dock", QDBusConnection::sessionBus())
+    , m_hideTimer(new QTimer(this))
     , m_showed(false)
     , m_leftMargin(0)
     , m_rightMargin(0)
     , m_bottomMargin(0)
 {
+    // DBus adaptor
     new LauncherAdaptor(this);
 
+    // Expose to QML
     engine()->rootContext()->setContextProperty("launcher", this);
 
+    // Transparent background for the view
     setColor(Qt::transparent);
-    setFlags(Qt::FramelessWindowHint);
+
+    // Frameless and don't appear in taskbar (Qt::Tool helps hide from taskbar across platforms)
+    setFlags(Qt::FramelessWindowHint | Qt::Tool);
+
+    // Keep QQuickView in SizeRootObjectToView mode
     setResizeMode(QQuickView::SizeRootObjectToView);
-    setClearBeforeRendering(true);
+
+    // Update geometry / screen
     onGeometryChanged();
 
+    // Load QML
     setSource(QUrl(QStringLiteral("qrc:/qml/main.qml")));
     setTitle(tr("Launcher"));
-    setVisible(true);
+
+    // Visible state
     setVisible(firstShow);
 
     // Let the animation in qml be hidden after the execution is complete
     m_hideTimer->setInterval(200);
     m_hideTimer->setSingleShot(true);
-    connect(m_hideTimer, &QTimer::timeout, this, [=] { setVisible(false); });
+    connect(m_hideTimer, &QTimer::timeout, this, [this] { setVisible(false); });
 
+    // If dock service already exists, connect signals; otherwise watch for unregistration
     if (m_dockInterface.isValid() && !m_dockInterface.lastError().isValid()) {
         updateMargins();
         connect(&m_dockInterface, SIGNAL(primaryGeometryChanged()), this, SLOT(updateMargins()));
@@ -71,14 +85,15 @@ Launcher::Launcher(bool firstShow, QQuickView *w)
                                                                QDBusConnection::sessionBus(),
                                                                QDBusServiceWatcher::WatchForUnregistration,
                                                                this);
-        connect(watcher, &QDBusServiceWatcher::serviceUnregistered, this, [=] {
+        connect(watcher, &QDBusServiceWatcher::serviceUnregistered, this, [this] {
             updateMargins();
             connect(&m_dockInterface, SIGNAL(primaryGeometryChanged()), this, SLOT(updateMargins()));
             connect(&m_dockInterface, SIGNAL(directionChanged()), this, SLOT(updateMargins()));
         });
     }
 
-    connect(qApp, &QApplication::primaryScreenChanged, this, [=] { onGeometryChanged(); });
+    // Screen changes
+    connect(qApp, &QApplication::primaryScreenChanged, this, [this] { onGeometryChanged(); });
     connect(this, &QQuickView::activeChanged, this, &Launcher::onActiveChanged);
 }
 
@@ -119,7 +134,7 @@ void Launcher::hideWindow()
 
 void Launcher::toggle()
 {
-    isVisible() ? Launcher::hideWindow() : Launcher::showWindow();
+    isVisible() ? hideWindow() : showWindow();
 }
 
 bool Launcher::dockAvailable()
@@ -181,6 +196,7 @@ void Launcher::updateSize()
 
 void Launcher::onGeometryChanged()
 {
+    // Ensure previous screen signals disconnected
     disconnect(screen());
 
     setScreen(qApp->primaryScreen());
@@ -192,7 +208,9 @@ void Launcher::onGeometryChanged()
 
 void Launcher::showEvent(QShowEvent *e)
 {
-    KWindowSystem::setState(winId(), NET::SkipTaskbar | NET::SkipPager);
+    // We intentionally avoid legacy KWindowSystem / NET calls here (KF6 removed X11 NET APIs).
+    // Using Qt::Tool window flag above will keep the window out of the taskbar on most platforms.
+    // On Wayland, the compositor controls taskbar/pager behavior and Qt cannot force it.
 
     QQuickView::showEvent(e);
 }
@@ -206,6 +224,5 @@ void Launcher::resizeEvent(QResizeEvent *e)
 void Launcher::onActiveChanged()
 {
     if (!isActive())
-        Launcher::hide();
+        hide();
 }
-
