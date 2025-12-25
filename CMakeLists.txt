@@ -20,6 +20,9 @@ find_package(Qt6 REQUIRED COMPONENTS
 
 find_package(KF6WindowSystem REQUIRED)
 
+# FishUI library
+find_package(FishUI REQUIRED)
+
 # Source files
 set(SRCS
     src/desktopproperties.cpp
@@ -70,6 +73,8 @@ target_link_libraries(${PROJECT_NAME}
         Qt6::Quick
         Qt6::QuickControls2
         KF6::WindowSystem
+        cutefishsystem_qmlplugins
+        FishUI
 )
 
 # Install rules
