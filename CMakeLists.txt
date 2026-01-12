@@ -73,7 +73,7 @@ target_link_libraries(${PROJECT_NAME}
         Qt6::Quick
         Qt6::QuickControls2
         KF6::WindowSystem
-        cutefishsystem_qmlplugins
+        cutefish_qmlplugins
         FishUI
 )
 
