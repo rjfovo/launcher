@@ -178,7 +178,7 @@ Item {
                     drag.target = icon
                     icon.grabToImage(function(result) {
                         control.Drag.imageSource = result.url
-                    })
+                    }, Qt.size(icon.width, icon.height))
                 } else {
                     drag.target = null
                 }
