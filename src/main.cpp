@@ -35,9 +35,9 @@
 #include "iconitem.h"
 #include "appmanager.h"
 
-#define DBUS_NAME "com.cutefish.Launcher"
+#define DBUS_NAME "com.Cutefish.Launcher"
 #define DBUS_PATH "/Launcher"
-#define DBUS_INTERFACE "com.cutefish.Launcher"
+#define DBUS_INTERFACE "com.Cutefish.Launcher"
 
 int main(int argc, char *argv[])
 {
