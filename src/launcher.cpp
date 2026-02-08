@@ -51,11 +51,18 @@ Launcher::Launcher(bool firstShow, QQuickView *w)
     // Expose to QML
     engine()->rootContext()->setContextProperty("launcher", this);
 
+    // Register icon theme image provider
+    engine()->addImageProvider("icontheme", new IconThemeImageProvider());
+
     // Transparent background for the view
     setColor(Qt::transparent);
 
     // Frameless and don't appear in taskbar (Qt::Tool helps hide from taskbar across platforms)
-    setFlags(Qt::FramelessWindowHint | Qt::Tool);
+    setFlags(Qt::FramelessWindowHint | Qt::Tool | Qt::WindowDoesNotAcceptFocus);
+    
+    // 设置窗口属性，确保不会意外显示
+    setProperty("_q_NoFocus", true);
+    setProperty("_q_platform_WindowType", "tooltip"); // 使用tooltip类型，通常不会显示在任务栏
 
     // Keep QQuickView in SizeRootObjectToView mode
     setResizeMode(QQuickView::SizeRootObjectToView);
@@ -67,8 +74,17 @@ Launcher::Launcher(bool firstShow, QQuickView *w)
     setSource(QUrl(QStringLiteral("qrc:/qml/main.qml")));
     setTitle(tr("Launcher"));
 
-    // Visible state
-    setVisible(firstShow);
+    // Visible state - 确保默认隐藏
+    // 只有在明确传递 --show 参数时才显示
+    if (firstShow) {
+        setVisible(true);
+        m_showed = true;
+        emit showedChanged();
+    } else {
+        setVisible(false);
+        m_showed = false;
+        emit showedChanged();
+    }
 
     // Let the animation in qml be hidden after the execution is complete
     m_hideTimer->setInterval(200);
