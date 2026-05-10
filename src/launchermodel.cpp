@@ -62,6 +62,13 @@ LauncherModel::LauncherModel(QObject *parent)
     QtConcurrent::run(LauncherModel::refresh, this);
 
     m_fileWatcher->addPath("/usr/share/applications");
+
+    // 监听用户目录（支持无 sudo 权限安装应用）
+    const QString userAppsDir = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/applications";
+    if (QDir(userAppsDir).exists()) {
+        m_fileWatcher->addPath(userAppsDir);
+    }
+
     connect(m_fileWatcher, &QFileSystemWatcher::fileChanged, this, &LauncherModel::onFileChanged);
     connect(m_fileWatcher, &QFileSystemWatcher::directoryChanged, this, [this](const QString &) {
         QtConcurrent::run(LauncherModel::refresh, this);
@@ -224,14 +231,28 @@ void LauncherModel::refresh(LauncherModel *manager)
         addedEntries.append(item.id);
 
     QStringList allEntries;
-    QDirIterator it("/usr/share/applications", { "*.desktop" }, QDir::NoFilter, QDirIterator::Subdirectories);
 
-    while (it.hasNext()) {
-        const auto fileName = it.next();
+    // 扫描系统目录
+    QDirIterator sysIt("/usr/share/applications", { "*.desktop" }, QDir::NoFilter, QDirIterator::Subdirectories);
+    while (sysIt.hasNext()) {
+        const auto fileName = sysIt.next();
         if (!QFile::exists(fileName))
             continue;
-
         allEntries.append(fileName);
+    }
+
+    // 扫描用户目录（支持无 sudo 权限安装应用）
+    const QString userAppsDir = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/applications";
+    if (QDir(userAppsDir).exists()) {
+        QDirIterator userIt(userAppsDir, { "*.desktop" }, QDir::NoFilter, QDirIterator::Subdirectories);
+        while (userIt.hasNext()) {
+            const auto fileName = userIt.next();
+            if (!QFile::exists(fileName))
+                continue;
+            // 避免重复添加（如果用户目录和系统目录有同名文件，用户目录优先）
+            if (!allEntries.contains(fileName))
+                allEntries.append(fileName);
+        }
     }
 
     for (const QString &fileName : allEntries) {

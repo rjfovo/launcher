@@ -1,8 +1,9 @@
-cutefish-launcher (0.8) UNRELEASED; urgency=high
+cutefish-launcher (0.9) UNRELEASED; urgency=high
 
-  * Update
+  * 支持扫描用户目录 ~/.local/share/applications/ 中的桌面文件
+  * 支持无 sudo 权限安装的应用在 Launcher 中显示
 
- -- CutefishOS Packaging Team <support@cutefishos.com>  Sat, 29 Jan 2022 03:28:29 +0800
+ -- CutefishOS Packaging Team <support@cutefishos.com>  Thu, 07 May 2026 22:28:00 +0800
 
 cutefish-launcher (0.5) UNRELEASED; urgency=high
 
