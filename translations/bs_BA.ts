@@ -2,37 +2,56 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="bs">
 <context>
+    <name>GridItemDelegate</name>
+    <message>
+        <source>Open</source>
+        <translation type="unfinished">Otvori</translation>
+    </message>
+    <message>
+        <source>Send to dock</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Send to desktop</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove from dock</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Uninstall</source>
+        <translation type="unfinished">Deinstaliraj</translation>
+    </message>
+</context>
+<context>
     <name>Launcher</name>
     <message>
-        <location filename="../src/launcher.cpp" line="50"/>
         <source>Launcher</source>
         <translation>Pokretač</translation>
     </message>
 </context>
 <context>
-    <name>LauncherGridDelegate</name>
-    <message>
-        <location filename="../qml/LauncherGridDelegate.qml" line="91"/>
-        <source>Open</source>
-        <translation>Otvori</translation>
-    </message>
-    <message>
-        <location filename="../qml/LauncherGridDelegate.qml" line="96"/>
-        <source>Uninstall</source>
-        <translation>Deinstaliraj</translation>
-    </message>
-</context>
-<context>
     <name>main</name>
     <message>
-        <location filename="../qml/main.qml" line="174"/>
         <source>Search</source>
         <translation>Traži</translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="260"/>
         <source>Not found</source>
         <translation>Nije nađeno</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to uninstall %1 ?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Uninstall</source>
+        <translation type="unfinished">Deinstaliraj</translation>
     </message>
 </context>
 </TS>
